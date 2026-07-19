@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Green Hydrogen Management System</title>
+  <!-- Tailwind CSS is explicitly avoided per instructions, we use Vanilla CSS -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       LOGIN VIEW
+       ========================================================================== -->
+  <div id="login-panel" class="login-container">
+    <div class="glass-card login-card">
+      <div class="login-header">
+        <div class="brand-icon">
+          <i data-lucide="leaf" style="color: #040810; width: 22px; height: 22px;"></i>
+        </div>
+        <h2>GHMS Portal</h2>
+        <p>Green Hydrogen Management System</p>
+      </div>
+
+      <div class="login-tabs">
+        <button id="tab-login" class="login-tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
+        <button id="tab-register" class="login-tab-btn" onclick="switchAuthTab('register')">Register</button>
+      </div>
+
+      <div id="auth-error-box" class="auth-error">
+        <i data-lucide="alert-circle" style="width: 18px; height: 18px;"></i>
+        <span id="auth-error-msg">Invalid username or password.</span>
+      </div>
+
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+        <div class="form-group">
+          <label for="auth-username">Username</label>
+          <div class="input-wrapper">
+            <i data-lucide="user"></i>
+            <input type="text" id="auth-username" class="form-input" placeholder="Enter username" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="auth-password">Password</label>
+          <div class="input-wrapper">
+            <i data-lucide="lock"></i>
+            <input type="password" id="auth-password" class="form-input" placeholder="Enter password" required>
+            <i data-lucide="eye" id="password-toggle-icon" class="password-toggle" onclick="togglePasswordVisibility()"></i>
+          </div>
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="form-btn">Access Command Center</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       MAIN APP INTERFACE
+       ========================================================================== -->
+  <div id="app-panel" class="app-container" style="display: none;">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div>
+        <div class="brand">
+          <div class="brand-icon">
+            <i data-lucide="zap" style="color: #040810; width: 20px; height: 20px;"></i>
+          </div>
+          <span class="brand-name gradient-text-hydrogen">GHMS Control</span>
+        </div>
+
+        <ul class="nav-menu">
+          <li class="nav-item active" id="nav-dashboard">
+            <a href="#/"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+          </li>
+          <li class="nav-item" id="nav-energy">
+            <a href="#/energy"><i data-lucide="sun"></i> Energy Grid</a>
+          </li>
+          <li class="nav-item" id="nav-electrolysis">
+            <a href="#/electrolysis"><i data-lucide="flask-conical"></i> Electrolysis Hub</a>
+          </li>
+          <li class="nav-item" id="nav-storage">
+            <a href="#/storage"><i data-lucide="database"></i> Storage Facility</a>
+          </li>
+          <li class="nav-item" id="nav-transport">
+            <a href="#/transport"><i data-lucide="truck"></i> Logistics Net</a>
+          </li>
+          <li class="nav-item" id="nav-analytics">
+            <a href="#/analytics"><i data-lucide="bar-chart-3"></i> Analytics</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="user-profile">
+        <div id="profile-avatar" class="user-avatar">AD</div>
+        <div class="user-details">
+          <span id="profile-name" class="username">Admin User</span>
+          <span class="user-role">System Operator</span>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()" title="Logout">
+          <i data-lucide="log-out"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="app-main">
+      <header class="app-header">
+        <div class="view-title-container">
+          <h2 id="current-view-title">Dashboard Overview</h2>
+        </div>
+        <div class="flex-between gap-1">
+          <div class="badge success" id="connection-status-badge">
+            <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i>
+            Secured Link
+          </div>
+        </div>
+      </header>
+
+      <div class="app-content">
+
+        <!-- ==========================================
+             1. DASHBOARD VIEW
+             ========================================== -->
+        <div id="view-dashboard" class="view-panel active">
+          <div class="welcome-section">
+            <h1>Welcome Back, <span id="dashboard-user" class="gradient-text-hydrogen">Operator</span></h1>
+            <p>System status is nominal. Real-time green hydrogen assets and energy flows are synced.</p>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="kpi-grid">
+            <div class="glass-card kpi-card">
+              <div class="kpi-icon-wrapper energy">
+                <i data-lucide="plug"></i>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Available Energy</span>
+                <span id="kpi-energy" class="kpi-value">0.00 kWh</span>
+              </div>
+            </div>
+
+            <div class="glass-card kpi-card">
+              <div class="kpi-icon-wrapper hydrogen">
+                <i data-lucide="atom"></i>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Unstored Hydrogen</span>
+                <span id="kpi-hydrogen" class="kpi-value">0.00 kg</span>
+              </div>
+            </div>
+
+            <div class="glass-card kpi-card">
+              <div class="kpi-icon-wrapper stored">
+                <i data-lucide="container"></i>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Hydrogen Stored</span>
+                <span id="kpi-stored" class="kpi-value">0.00 kg</span>
+              </div>
+            </div>
+
+            <div class="glass-card kpi-card">
+              <div class="kpi-icon-wrapper transported">
+                <i data-lucide="navigation"></i>
+              </div>
+              <div class="kpi-info">
+                <span class="kpi-label">Transported</span>
+                <span id="kpi-transported" class="kpi-value">0.00 kg</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-layout">
+            <!-- Storage Tank Fill Gauge -->
+            <div class="glass-card gauge-section">
+              <h3 class="mb-4">Global Storage Capacity</h3>
+              <div class="gauge-container">
+                <svg class="gauge-svg" viewBox="0 0 200 200">
+                  <defs>
+                    <linearGradient id="gauge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#05d580" />
+                      <stop offset="100%" stop-color="#00d2ff" />
+                    </linearGradient>
+                  </defs>
+                  <circle class="gauge-bg-ring" cx="100" cy="100" r="90" />
+                  <circle id="capacity-gauge-fill" class="gauge-fill-ring" cx="100" cy="100" r="90" />
+                </svg>
+                <div class="gauge-text">
+                  <span id="capacity-percentage" class="gauge-number">0%</span>
+                  <span class="gauge-unit"><span id="gauge-stored-val">0.0</span> / 100 kg</span>
+                </div>
+              </div>
+              <p class="source-efficiency">Estimated CO₂ Saved: <strong id="dashboard-co2-saved" style="color: var(--accent-hydrogen);">0.00 kg</strong></p>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="glass-card">
+              <h3 class="feed-title">
+                <i data-lucide="activity" style="color: var(--accent-hydrogen); width: 18px; height: 18px;"></i>
+                Recent Operations Log
+              </h3>
+              <div id="dashboard-activity-feed" class="activity-feed">
+                <!-- Dynamic Log Entries Go Here -->
+                <div class="activity-item">
+                  <div class="activity-badge system"><i data-lucide="check"></i></div>
+                  <div class="activity-body">
+                    <div class="activity-msg">System started successfully.</div>
+                    <div class="activity-time">Just now</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+             2. ENERGY INFLOW VIEW
+             ========================================== -->
+        <div id="view-energy" class="view-panel">
+          <div class="glass-card">
+            <h3>Renewable Energy Ingestion</h3>
+            <p class="mb-4">Select a clean power source and allocate electricity production into the grid pool.</p>
+
+            <div class="energy-sources-grid">
+              <div class="glass-card source-card selected" id="src-solar" onclick="selectEnergySource('Solar', 0.90)">
+                <i data-lucide="sun" class="source-icon"></i>
+                <div class="source-name">Solar Power</div>
+                <div class="source-efficiency">Grid Efficiency: 90%</div>
+              </div>
+              <div class="glass-card source-card" id="src-wind" onclick="selectEnergySource('Wind', 0.85)">
+                <i data-lucide="wind" class="source-icon"></i>
+                <div class="source-name">Wind Power</div>
+                <div class="source-efficiency">Grid Efficiency: 85%</div>
+              </div>
+              <div class="glass-card source-card" id="src-hydro" onclick="selectEnergySource('Hydro', 0.95)">
+                <i data-lucide="droplet" class="source-icon"></i>
+                <div class="source-name">Hydroelectric</div>
+                <div class="source-efficiency">Grid Efficiency: 95%</div>
+              </div>
+              <div class="glass-card source-card" id="src-geothermal" onclick="selectEnergySource('Geothermal', 0.80)">
+                <i data-lucide="flame" class="source-icon"></i>
+                <div class="source-name">Geothermal</div>
+                <div class="source-efficiency">Grid Efficiency: 80%</div>
+              </div>
+            </div>
+
+            <div class="input-section-layout">
+              <div>
+                <form id="energy-input-form" onsubmit="handleEnergyInput(event)">
+                  <div class="form-group">
+                    <label for="energy-quantity">Power Quantity (kWh)</label>
+                    <div class="input-wrapper">
+                      <i data-lucide="zap" style="color: var(--accent-energy);"></i>
+                      <input type="number" id="energy-quantity" min="1" max="10000" class="form-input" placeholder="e.g. 500" required oninput="calculateEnergyPreview()">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <input type="range" id="energy-slider" min="10" max="2000" step="10" value="500" style="width: 100%; accent-color: var(--accent-energy); background: rgba(255,255,255,0.05); height: 6px; border-radius: 3px;" oninput="syncSliderToInput(this.value)">
+                  </div>
+                  <button type="submit" class="btn btn-primary mt-4">
+                    <i data-lucide="plus-circle"></i> Inject into Grid Pool
+                  </button>
+                </form>
+              </div>
+
+              <!-- Production Forecast Preview -->
+              <div class="preview-box">
+                <h4 class="mb-4">Injection Forecast Preview</h4>
+                <div class="preview-grid">
+                  <div class="preview-box">
+                    <div class="preview-label">Source</div>
+                    <div id="preview-source-name" class="preview-value" style="color: var(--accent-energy);">Solar</div>
+                  </div>
+                  <div class="preview-box">
+                    <div class="preview-label">Net Injected</div>
+                    <div id="preview-net-energy" class="preview-value">450.00 kWh</div>
+                  </div>
+                  <div class="preview-box">
+                    <div class="preview-label">Hydrogen Potential</div>
+                    <div id="preview-potential-h2" class="preview-value" style="color: var(--accent-hydrogen);">9.00 kg</div>
+                  </div>
+                  <div class="preview-box">
+                    <div class="preview-label">CO₂ Offset Potential</div>
+                    <div id="preview-potential-co2" class="preview-value">90.00 kg</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+             3. ELECTROLYSIS HUB VIEW
+             ========================================== -->
+        <div id="view-electrolysis" class="view-panel">
+          <div class="electrolysis-layout">
+            
+            <!-- Chamber Simulator -->
+            <div class="reactor-chamber">
+              <div class="water-level" id="reactor-water"></div>
+              
+              <!-- Anode (+) -->
+              <div class="reactor-anode">
+                <span class="electrode-charge">+</span>
+                <span style="color: var(--accent-energy); font-weight:600; font-size:0.75rem; transform: rotate(-90deg); white-space:nowrap;">ANODE</span>
+                <span class="electrode-charge">O₂</span>
+              </div>
+              <div class="bubble-container oxygen" id="bubble-container-oxygen"></div>
+
+              <!-- Cathode (-) -->
+              <div class="reactor-cathode">
+                <span class="electrode-charge">-</span>
+                <span style="color: var(--accent-hydrogen); font-weight:600; font-size:0.75rem; transform: rotate(-90deg); white-space:nowrap;">CATHODE</span>
+                <span class="electrode-charge">H₂</span>
+              </div>
+              <div class="bubble-container hydrogen" id="bubble-container-hydrogen"></div>
+
+              <!-- Glow overlay -->
+              <div class="reactor-glow" id="reactor-glow"></div>
+            </div>
+
+            <!-- Panel Controls -->
+            <div class="glass-card electrolysis-controls">
+              <div>
+                <h3>Electrolysis Chamber Panel</h3>
+                <p class="mb-4">Convert accumulated grid renewable energy into high-purity Green Hydrogen through water splitting.</p>
+                
+                <div class="energy-available-meter">
+                  <div class="meter-header">
+                    <span>Available Grid Energy Pool</span>
+                    <span id="electrolysis-pool-value" style="font-weight: 600; color: var(--accent-energy);">0.00 kWh</span>
+                  </div>
+                  <div class="meter-bar-container">
+                    <div id="electrolysis-pool-bar" class="meter-bar-fill"></div>
+                  </div>
+                </div>
+
+                <div class="preview-grid mb-4">
+                  <div class="preview-box">
+                    <div class="preview-label">Electrolysis Ratio</div>
+                    <div class="preview-value">50 kWh : 1 kg</div>
+                  </div>
+                  <div class="preview-box">
+                    <div class="preview-label">Electrolyte State</div>
+                    <div class="preview-value" style="color: var(--accent-hydrogen);">Nominal</div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <button id="btn-run-electrolysis" class="electrolysis-button w-100" onclick="triggerElectrolysis()" style="width: 100%;">
+                  <i data-lucide="zap"></i> Initiate Electrolysis Process
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==========================================
+             4. STORAGE FACILITY VIEW
+             ========================================== -->
+        <div id="view-storage" class="view-panel">
+          <div class="storage-layout">
+            
+            <!-- Storage Tanks Grid -->
+            <div>
+              <div class="tanks-container">
+                <!-- Tank 1 -->
+                <div class="glass-card storage-tank-card">
+                  <div class="tank-detail-capsule">TANK A</div>
+                  <div class="tank-visual-container">
+                    <div id="tank-a-fill" class="tank-visual-fill"></div>
+                  </div>
+                  <h4 id="tank-a-label">0.00 kg H₂</h4>
+                  <div class="tank-stats-row">
+                    <span>Capacity</span>
+                    <span class="tank-stats-val">50.00 kg</span>
+                  </div>
+                  <div class="tank-stats-row">
+                    <span>Pressure</span>
+                    <span id="tank-a-pressure" class="tank-stats-val">0.0 bar</span>
+                  </div>
+                  <div class="tank-stats-row">
+                    <span>Temp</span>
+                    <span id="tank-a-temp" class="tank-stats-val">15.0 °C</span>
+                  </div>
+                </div>
+
+                <!-- Tank 2 -->
+                <div class="glass-card storage-tank-card">
+                  <div class="tank-detail-capsule">TANK B</div>
+                  <div class="tank-visual-container">
+                    <div id="tank-b-fill" class="tank-visual-fill"></div>
+                  </div>
+                  <h4 id="tank-b-label">0.00 kg H₂</h4>
+                  <div class="tank-stats-row">
+                    <span>Capacity</span>
+                    <span class="tank-stats-val">50.00 kg</span>
+                  </div>
+                  <div class="tank-stats-row">
+                    <span>Pressure</span>
+                    <span id="tank-b-pressure" class="tank-stats-val">0.0 bar</span>
+                  </div>
+                  <div class="tank-stats-row">
+                    <span>Temp</span>
+                    <span id="tank-b-temp" class="tank-stats-val">15.0 °C</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Storage Controller -->
+            <div class="glass-card">
+              <h3>Compressor & Storage Manager</h3>
+              <p class="mb-4">Transfer newly synthesized green hydrogen into localized high-pressure storage tanks (Max System Capacity: 100 kg).</p>
+
+              <div class="preview-box mb-4">
+                <div class="preview-label">Unstored Hydrogen Available</div>
+                <div id="storage-unstored-val" class="preview-value" style="color: var(--accent-hydrogen);">0.00 kg</div>
+              </div>
+
+              <form id="storage-input-form" onsubmit="handleStoreHydrogen(event)">
+                <div class="form-group">
+                  <label for="storage-quantity">Hydrogen to Store (kg)</label>
+                  <div class="input-wrapper">
+                    <i data-lucide="container" style="color: var(--accent-hydrogen);"></i>
+                    <input type="number" id="storage-quantity" step="0.01" min="0.01" class="form-input" placeholder="e.g. 8.00" required>
+                  </div>
+                </div>
+                <div class="flex-between gap-1 mt-4">
+                  <button type="button" class="btn" onclick="setStorageMax()">Set Max</button>
+                  <button type="submit" class="btn btn-success" style="flex: 1;">
+                    <i data-lucide="arrow-down-to-line"></i> Compress & Store
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==========================================
+             5. LOGISTICS & TRANSPORT VIEW
+             ========================================== -->
+        <div id="view-transport" class="view-panel">
+          <div class="transport-layout">
+            
+            <!-- Route Dispatch Center -->
+            <div class="glass-card">
+              <h3>Logistics Dispatcher</h3>
+              <p class="mb-4">Select transport mode and dispatch hydrogen from storage tanks to target distribution grids.</p>
+
+              <div class="transport-methods">
+                <div class="method-btn selected" id="method-pipeline" onclick="selectTransportMethod('Pipeline', 250)">
+                  <div class="method-icon"><i data-lucide="git-commit"></i></div>
+                  <div class="method-details">
+                    <h4>Direct Pipeline Connection</h4>
+                    <p>Max flow rate: 250 kg/h • Constant dispatch • Efficiency: 98%</p>
+                  </div>
+                </div>
+
+                <div class="method-btn" id="method-tanker" onclick="selectTransportMethod('Liquid Tanker', 50)">
+                  <div class="method-icon"><i data-lucide="truck"></i></div>
+                  <div class="method-details">
+                    <h4>Liquid Hydrogen Road Tanker</h4>
+                    <p>Capacity: 50 kg • Mobile road shipment • Efficiency: 92%</p>
+                  </div>
+                </div>
+
+                <div class="method-btn" id="method-trailer" onclick="selectTransportMethod('Tube Trailer', 80)">
+                  <div class="method-icon"><i data-lucide="train"></i></div>
+                  <div class="method-details">
+                    <h4>Compressed Tube Trailer (Rail)</h4>
+                    <p>Capacity: 80 kg • Rail network dispatch • Efficiency: 95%</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="preview-box mb-4">
+                <div class="preview-label">Stored Hydrogen Available</div>
+                <div id="transport-stored-val" class="preview-value" style="color: #8c7ae6;">0.00 kg</div>
+              </div>
+
+              <form id="transport-input-form" onsubmit="handleTransportHydrogen(event)">
+                <div class="form-group">
+                  <label for="transport-quantity">Hydrogen to Transport (kg)</label>
+                  <div class="input-wrapper">
+                    <i data-lucide="navigation" style="color: var(--accent-transport);"></i>
+                    <input type="number" id="transport-quantity" step="0.01" min="0.01" class="form-input" placeholder="e.g. 5.00" required>
+                  </div>
+                </div>
+                <div class="flex-between gap-1 mt-4">
+                  <button type="button" class="btn" onclick="setTransportMax()">Set Max</button>
+                  <button type="submit" id="btn-dispatch-transport" class="btn btn-primary" style="flex: 1; background: linear-gradient(135deg, var(--accent-transport) 0%, #d35400 100%); box-shadow: 0 4px 15px rgba(255, 159, 67, 0.2);">
+                    <i data-lucide="send"></i> Dispatch Shipment
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Dispatch Map Visualizer -->
+            <div class="glass-card map-card">
+              <div class="map-container">
+                <div class="map-grid-bg"></div>
+                
+                <svg class="map-route-path" viewBox="0 0 400 380">
+                  <path id="map-route-track" class="map-route-line" d="M 100 280 Q 200 200 300 120" />
+                  <path id="map-route-active" class="map-route-fill" d="M 100 280 Q 200 200 300 120" />
+                </svg>
+
+                <div class="map-node hub">
+                  <i data-lucide="database" style="width: 16px; height: 16px;"></i>
+                  <span class="node-label">Hydrogen Hub (Storage)</span>
+                </div>
+
+                <div class="map-node dest">
+                  <i data-lucide="factory" style="width: 16px; height: 16px;"></i>
+                  <span class="node-label">Industrial Terminal</span>
+                </div>
+
+                <div id="animated-vehicle" class="map-vehicle">
+                  <i data-lucide="truck" id="vehicle-icon" style="width: 12px; height: 12px;"></i>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==========================================
+             6. SUSTAINABILITY ANALYTICS VIEW
+             ========================================== -->
+        <div id="view-analytics" class="view-panel">
+          <!-- Green Impact Metrics -->
+          <div class="impact-grid">
+            <div class="glass-card impact-card">
+              <div class="impact-icon"><i data-lucide="shield"></i></div>
+              <div class="impact-info">
+                <h3 id="analytics-co2-saved">0.00 kg</h3>
+                <p>Estimated CO₂ Offset Saved</p>
+                <span class="source-efficiency">Calculated at 10.00 kg CO₂ per kg H₂</span>
+              </div>
+            </div>
+
+            <div class="glass-card impact-card">
+              <div class="impact-icon" style="color: #4cd137;"><i data-lucide="tree-pine"></i></div>
+              <div class="impact-info">
+                <h3 id="analytics-trees-planted">0.0</h3>
+                <p>Equivalent Trees Planted</p>
+                <span class="source-efficiency">Based on annual absorption rates</span>
+              </div>
+            </div>
+
+            <div class="glass-card impact-card">
+              <div class="impact-icon" style="color: #eccc68;"><i data-lucide="car"></i></div>
+              <div class="impact-info">
+                <h3 id="analytics-cars-off">0.0</h3>
+                <p>Diesel Car Miles Prevented</p>
+                <span class="source-efficiency">Standard passenger car emissions</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transaction / Activity Log Table -->
+          <div class="glass-card">
+            <div class="flex-between mb-4">
+              <h3>System History Ledger</h3>
+              <div class="flex-between gap-1">
+                <button class="btn" onclick="exportLogToCSV()">
+                  <i data-lucide="download"></i> Download CSV Report
+                </button>
+                <button class="btn btn-danger" onclick="confirmResetSystem()">
+                  <i data-lucide="rotate-ccw"></i> Reset System
+                </button>
+              </div>
+            </div>
+
+            <div class="log-table-container">
+              <table class="log-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Operation Type</th>
+                    <th>Details</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="analytics-log-tbody">
+                  <!-- Dynamic Logs Inserted Here -->
+                  <tr>
+                    <td colspan="4" style="text-align: center; color: var(--text-muted);">No records registered.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script src="app.js"></script>
+</body>
+</html>
